@@ -1,0 +1,23 @@
+replicaCount: 3
+
+service:
+  port: 80
+
+pdb:
+  minAvailable: 1
+  matchLabels:
+    app: nginx
+
+serviceAccount:
+  create: true
+
+ingress:
+  enabled: true
+  # host: example.com
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 80
+

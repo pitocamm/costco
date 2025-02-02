@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "{{ include "pdb.fullname" . }}-test-connection"
+  labels:
+    {{- include "pdb.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": test
+spec:
+  containers:
+    - name: wget
+      image: busybox
+      command: ['wget']
+      args: ['{{ include "pdb.fullname" . }}:{{ .Values.service.port }}']
+  restartPolicy: Never
