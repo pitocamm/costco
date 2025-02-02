@@ -1,0 +1,77 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: my-app
+  namespace: default
+spec:
+  serviceName: "my-app-service"
+  replicas: 5  # Deploy 3 pods
+  selector:
+    matchLabels:
+      app: my-app
+  template:
+    metadata:
+      labels:
+        app: my-app
+    spec:
+      terminationGracePeriodSeconds: 10
+      containers:
+      - name: my-app-container
+        image: nginx:latest  # Replace with your application image
+        ports:
+        - containerPort: 80
+          name: http
+        volumeMounts:
+        - name: data
+          mountPath: /data  # Persistent data storage
+  volumeClaimTemplates:
+  - metadata:
+      name: data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 1Gi  # Adjust storage size
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-app-service
+  namespace: default
+spec:
+  selector:
+    app: my-app
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+  clusterIP: None  # Headless service for stable pod identity
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-app-lb
+  namespace: default
+spec:
+  selector:
+    app: my-app
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+  type: LoadBalancer  # External access to the StatefulSet
+
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: my-app-pdb
+  namespace: default
+spec:
+  minAvailable: 1  # Ensures at least one pod is always running
+  selector:
+    matchLabels:
+      app: my-app
+
